@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Pro Notes App</title>
+
+<style>
+body{
+margin:0;
+font-family:Arial;
+background:linear-gradient(135deg,#667eea,#764ba2);
+display:flex;
+justify-content:center;
+align-items:center;
+min-height:100vh;
+transition:0.3s;
+}
+
+.container{
+width:95%;
+max-width:500px;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:15px;
+box-shadow:0 10px 30px rgba(0,0,0,0.2);
+margin:10px 0;
+}
+
+.hidden{
+display:none;
+}
+
+input, textarea{
+width:100%;
+padding:10px;
+margin:8px 0;
+border-radius:8px;
+border:1px solid #ccc;
+}
+
+button{
+padding:8px 15px;
+margin:5px 2px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+background:#667eea;
+color:white;
+}
+
+button:hover{
+opacity:0.8;
+}
+
+.note{
+background:#f1f1f1;
+padding:10px;
+margin:10px 0;
+border-radius:8px;
+}
+
+.note img{
+width:100%;
+border-radius:8px;
+margin-top:5px;
+}
+
+.top-bar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.dark{
+background:#222;
+color:white;
+}
+
+.dark .card{
+background:#333;
+color:white;
+}
+
+.dark input, .dark textarea{
+background:#444;
+color:white;
+border:1px solid #666;
+}
+</style>
+
+</head>
+<body>
+
+<div class="container">
+
+<!-- Register -->
+<div class="card" id="registerBox">
+<h2>Create Account</h2>
+<input type="text" id="regUser" placeholder="Username">
+<input type="password" id="regPass" placeholder="Password">
+<button onclick="register()">Register</button>
+<p>Already have account? <span onclick="showLogin()" style="color:blue;cursor:pointer;">Login</span></p>
+</div>
+
+<!-- Login -->
+<div class="card hidden" id="loginBox">
+<h2>Login</h2>
+<input type="text" id="loginUser" placeholder="Username">
+<input type="password" id="loginPass" placeholder="Password">
+<button onclick="login()">Login</button>
+<p>No account? <span onclick="showRegister()" style="color:blue;cursor:pointer;">Register</span></p>
+</div>
+
+<!-- Notes -->
+<div class="card hidden" id="notesBox">
+<div class="top-bar">
+<h2>My Notes</h2>
+<div>
+<button onclick="toggleDark()">🌙</button>
+<button onclick="logout()">Logout</button>
+</div>
+</div>
+
+<input type="text" id="searchInput" placeholder="Search notes..." onkeyup="searchNotes()">
+
+<textarea id="noteInput" placeholder="Write something..."></textarea>
+<input type="file" id="imageInput">
+<button onclick="addNote()">Add Note</button>
+
+<h4>Total Notes: <span id="noteCount">0</span></h4>
+
+<div id="notesList"></div>
+</div>
+
+</div>
+
+<script>
+let currentUser = localStorage.getItem("activeUser") || "";
+
+if(currentUser){
+showNotes();
+}
+
+function showLogin(){
+registerBox.classList.add("hidden");
+loginBox.classList.remove("hidden");
+}
+
+function showRegister(){
+loginBox.classList.add("hidden");
+registerBox.classList.remove("hidden");
+}
+
+function register(){
+let user = regUser.value.trim();
+let pass = regPass.value.trim();
+
+if(!user || !pass){
+alert("Fill all fields");
+return;
+}
+
+if(localStorage.getItem(user)){
+alert("User already exists");
+return;
+}
+
+localStorage.setItem(user, pass);
+alert("Registered Successfully");
+showLogin();
+}
+
+function login(){
+let user = loginUser.value.trim();
+let pass = loginPass.value.trim();
+
+if(localStorage.getItem(user) === pass){
+currentUser = user;
+localStorage.setItem("activeUser", user);
+showNotes();
+}else{
+alert("Invalid Login");
+}
+}
+
+function logout(){
+localStorage.removeItem("activeUser");
+currentUser="";
+location.reload();
+}
+
+function showNotes(){
+registerBox.classList.add("hidden");
+loginBox.classList.add("hidden");
+notesBox.classList.remove("hidden");
+loadNotes();
+}
+
+function addNote(){
+let text = noteInput.value.trim();
+let imageFile = imageInput.files[0];
+
+if(!text){
+alert("Write something");
+return;
+}
+
+let reader = new FileReader();
+
+reader.onload = function(){
+let notes = JSON.parse(localStorage.getItem(currentUser+"_notes")) || [];
+notes.push({
+text:text,
+image: reader.result || "",
+date: new Date().toLocaleString()
+});
+localStorage.setItem(currentUser+"_notes", JSON.stringify(notes));
+noteInput.value="";
+imageInput.value="";
+loadNotes();
+};
+
+if(imageFile){
+reader.readAsDataURL(imageFile);
+}else{
+reader.onload();
+}
+}
+
+function loadNotes(){
+let notes = JSON.parse(localStorage.getItem(currentUser+"_notes")) || [];
+notesList.innerHTML="";
+noteCount.innerText = notes.length;
+
+notes.forEach((n,index)=>{
+notesList.innerHTML += `
+<div class="note">
+<p><b>${n.date}</b></p>
+<p>${n.text}</p>
+${n.image ? `<img src="${n.image}">` : ""}
+<button onclick="editNote(${index})">Edit</button>
+<button onclick="deleteNote(${index})">Delete</button>
+</div>
+`;
+});
+}
+
+function deleteNote(index){
+let notes = JSON.parse(localStorage.getItem(currentUser+"_notes")) || [];
+notes.splice(index,1);
+localStorage.setItem(currentUser+"_notes", JSON.stringify(notes));
+loadNotes();
+}
+
+function editNote(index){
+let notes = JSON.parse(localStorage.getItem(currentUser+"_notes")) || [];
+let newText = prompt("Edit Note:", notes[index].text);
+if(newText){
+notes[index].text = newText;
+localStorage.setItem(currentUser+"_notes", JSON.stringify(notes));
+loadNotes();
+}
+}
+
+function searchNotes(){
+let search = searchInput.value.toLowerCase();
+let notes = document.querySelectorAll(".note");
+
+notes.forEach(note=>{
+note.style.display = note.innerText.toLowerCase().includes(search)
+? "block" : "none";
+});
+}
+
+function toggleDark(){
+document.body.classList.toggle("dark");
+}
+</script>
+
+</body>
+</html>
