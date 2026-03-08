@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Cloud Notes</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<h1>🌸 Cloud Notes</h1>
+
+<button onclick="toggleDark()">Dark Mode</button>
+
+<h2>Register</h2>
+
+<input id="rname" placeholder="name">
+<input id="remail" placeholder="email">
+<input id="rpass" type="password" placeholder="password">
+
+<button onclick="register()">Register</button>
+
+<h2>Login</h2>
+
+<input id="lemail" placeholder="email">
+<input id="lpass" type="password" placeholder="password">
+
+<button onclick="login()">Login</button>
+
+<hr>
+
+<h2>Create Note</h2>
+
+<input id="title" placeholder="title">
+
+<textarea id="content"></textarea>
+
+<input type="datetime-local" id="reminder">
+
+<button onclick="voice()">🎤 Voice</button>
+
+<button onclick="createNote()">Save</button>
+
+<h2>Notes</h2>
+
+<input placeholder="search" onkeyup="search(this.value)">
+
+<div id="notes"></div>
+
+<script src="app.js"></script>
+
+</body>
+
+</html>
